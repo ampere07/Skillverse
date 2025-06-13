@@ -1,2 +1,0 @@
-# Skillverse
-Thesis 
