@@ -229,7 +229,7 @@ const Assignments: React.FC = () => {
                     to={`/assignment/${assignment._id}`}
                     fullWidth
                   >
-                    {assignment.status === 'todo' ? 'Start' : 'Continue'}
+                    {assignment.status === 'todo' ? 'Start' : assignment.status === 'completed' ? 'View' : 'Continue'}
                   </Button>
                 </CardActions>
               </Card>

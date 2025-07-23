@@ -12,25 +12,87 @@ import {
   ListItemText,
   ListItemIcon,
   Chip,
+  Badge,
 } from '@mui/material';
-import { TrendingUp, CheckCircle, Schedule } from '@mui/icons-material';
+import { 
+  Star, 
+  TrendingUp, 
+  Code, 
+  Psychology, 
+  Speed, 
+  School,
+  EmojiEvents,
+  Lightbulb
+} from '@mui/icons-material';
 
 const Progress: React.FC = () => {
-  const progressData = [
-    { skill: 'JavaScript', progress: 75, level: 'Intermediate' },
-    { skill: 'Python', progress: 60, level: 'Beginner' },
-    { skill: 'Data Structures', progress: 45, level: 'Beginner' },
-    { skill: 'Algorithms', progress: 30, level: 'Beginner' },
-    { skill: 'React', progress: 80, level: 'Intermediate' },
-    { skill: 'Node.js', progress: 55, level: 'Beginner' },
+  const skillCategories = [
+    {
+      name: 'Programming Languages',
+      skills: [
+        { name: 'JavaScript', level: 75, trend: 'up' },
+        { name: 'Python', level: 60, trend: 'up' },
+        { name: 'Java', level: 45, trend: 'stable' },
+        { name: 'C++', level: 30, trend: 'down' },
+      ]
+    },
+    {
+      name: 'Data Structures & Algorithms',
+      skills: [
+        { name: 'Arrays & Strings', level: 80, trend: 'up' },
+        { name: 'Linked Lists', level: 65, trend: 'up' },
+        { name: 'Trees & Graphs', level: 40, trend: 'stable' },
+        { name: 'Dynamic Programming', level: 25, trend: 'up' },
+      ]
+    },
+    {
+      name: 'Web Development',
+      skills: [
+        { name: 'React', level: 80, trend: 'up' },
+        { name: 'Node.js', level: 55, trend: 'up' },
+        { name: 'CSS', level: 70, trend: 'stable' },
+        { name: 'MongoDB', level: 35, trend: 'up' },
+      ]
+    }
   ];
 
-  const recentActivity = [
-    { type: 'completed', title: 'Array Manipulation', date: '2 hours ago', points: 85 },
-    { type: 'submitted', title: 'Binary Search Implementation', date: '1 day ago', points: null },
-    { type: 'completed', title: 'React Component Design', date: '3 days ago', points: 92 },
-    { type: 'completed', title: 'Sorting Algorithms', date: '1 week ago', points: 78 },
+  const achievements = [
+    { name: 'First Assignment', icon: <Star />, earned: true, description: 'Complete your first assignment' },
+    { name: 'JavaScript Master', icon: <Code />, earned: true, description: 'Achieve 70% proficiency in JavaScript' },
+    { name: 'Problem Solver', icon: <Psychology />, earned: true, description: 'Solve 10 coding problems' },
+    { name: 'Speed Demon', icon: <Speed />, earned: false, description: 'Complete an assignment in under 30 minutes' },
+    { name: 'Scholar', icon: <School />, earned: false, description: 'Maintain 90% average for a month' },
+    { name: 'Champion', icon: <EmojiEvents />, earned: false, description: 'Top performer in a class' },
   ];
+
+  const recommendations = [
+    {
+      title: 'Focus on Tree Data Structures',
+      description: 'Your algorithm skills are improving, but tree structures need attention.',
+      priority: 'high'
+    },
+    {
+      title: 'Practice Dynamic Programming',
+      description: 'This is a key area for algorithmic thinking and interview preparation.',
+      priority: 'medium'
+    },
+    {
+      title: 'Expand Backend Knowledge',
+      description: 'Consider learning more about databases and server-side development.',
+      priority: 'low'
+    }
+  ];
+
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'up':
+        return <TrendingUp color="success" sx={{ fontSize: 16 }} />;
+      case 'down':
+        return <TrendingUp color="error" sx={{ fontSize: 16, transform: 'rotate(180deg)' }} />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <Box>
@@ -38,125 +100,138 @@ const Progress: React.FC = () => {
         My Progress
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        Track your learning progress and skill development
+        Track your learning journey and skill development
       </Typography>
 
       <Grid container spacing={3}>
-        {/* Overall Progress */}
+        {/* Overall Skill Level */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 80, height: 80, mx: 'auto', mb: 2 }}>
+                <Typography variant="h4">3</Typography>
+              </Avatar>
+              <Typography variant="h6" gutterBottom>
+                Overall Skill Level
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Intermediate Developer
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={65}
+                sx={{ height: 8, borderRadius: 4, mt: 2 }}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                65% to Advanced Level
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Skill Categories */}
         <Grid item xs={12} md={8}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Skill Progress
+                Skill Breakdown
               </Typography>
-              {progressData.map((item, index) => (
-                <Box key={index} sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body1">{item.skill}</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip
-                        label={item.level}
-                        size="small"
-                        color={item.level === 'Beginner' ? 'default' : 'primary'}
+              {skillCategories.map((category, categoryIndex) => (
+                <Box key={categoryIndex} sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    {category.name}
+                  </Typography>
+                  {category.skills.map((skill, skillIndex) => (
+                    <Box key={skillIndex} sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body2">{skill.name}</Typography>
+                          {getTrendIcon(skill.trend)}
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {skill.level}%
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={skill.level}
+                        sx={{ height: 6, borderRadius: 3 }}
                       />
-                      <Typography variant="body2" color="text.secondary">
-                        {item.progress}%
-                      </Typography>
                     </Box>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={item.progress}
-                    sx={{ height: 8, borderRadius: 4 }}
-                  />
+                  ))}
                 </Box>
               ))}
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Progress Summary */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Progress Summary
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                  <TrendingUp />
-                </Avatar>
-                <Box>
-                  <Typography variant="h6">Level 3</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Intermediate Developer
-                  </Typography>
-                </Box>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={65}
-                sx={{ height: 8, borderRadius: 4, mb: 1 }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                65% to Level 4
-              </Typography>
-            </CardContent>
-          </Card>
-
+        {/* Achievements */}
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                This Week
+                Achievements
               </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="body2">Assignments Completed</Typography>
-                <Typography variant="body2" color="primary">3</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="body2">Time Spent</Typography>
-                <Typography variant="body2" color="primary">12h 30m</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="body2">Points Earned</Typography>
-                <Typography variant="body2" color="primary">255</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2">Streak</Typography>
-                <Typography variant="body2" color="primary">7 days</Typography>
-              </Box>
+              <List>
+                {achievements.map((achievement, index) => (
+                  <ListItem key={index} divider={index < achievements.length - 1}>
+                    <ListItemIcon>
+                      <Badge
+                        badgeContent={achievement.earned ? <Star sx={{ fontSize: 12 }} /> : null}
+                        color="primary"
+                      >
+                        <Avatar
+                          sx={{
+                            bgcolor: achievement.earned ? 'success.main' : 'grey.300',
+                            width: 40,
+                            height: 40
+                          }}
+                        >
+                          {achievement.icon}
+                        </Avatar>
+                      </Badge>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={achievement.name}
+                      secondary={achievement.description}
+                      sx={{
+                        '& .MuiListItemText-primary': {
+                          color: achievement.earned ? 'text.primary' : 'text.secondary'
+                        }
+                      }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Recent Activity */}
-        <Grid item xs={12}>
+        {/* Recommendations */}
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Recent Activity
+                AI Recommendations
               </Typography>
               <List>
-                {recentActivity.map((activity, index) => (
-                  <ListItem key={index} divider={index < recentActivity.length - 1}>
+                {recommendations.map((rec, index) => (
+                  <ListItem key={index} divider={index < recommendations.length - 1}>
                     <ListItemIcon>
-                      {activity.type === 'completed' ? (
-                        <CheckCircle color="success" />
-                      ) : (
-                        <Schedule color="warning" />
-                      )}
+                      <Lightbulb color="warning" />
                     </ListItemIcon>
                     <ListItemText
-                      primary={activity.title}
-                      secondary={activity.date}
+                      primary={rec.title}
+                      secondary={rec.description}
                     />
-                    {activity.points && (
-                      <Chip
-                        label={`${activity.points} pts`}
-                        color={activity.points >= 90 ? 'success' : activity.points >= 70 ? 'warning' : 'error'}
-                        size="small"
-                      />
-                    )}
+                    <Chip
+                      label={rec.priority}
+                      color={
+                        rec.priority === 'high' ? 'error' :
+                        rec.priority === 'medium' ? 'warning' : 'default'
+                      }
+                      size="small"
+                    />
                   </ListItem>
                 ))}
               </List>

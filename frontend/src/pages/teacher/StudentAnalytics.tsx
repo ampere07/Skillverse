@@ -5,12 +5,12 @@ import {
   Grid,
   Card,
   CardContent,
+  LinearProgress,
+  Avatar,
   List,
   ListItem,
   ListItemText,
   ListItemAvatar,
-  Avatar,
-  LinearProgress,
   Chip,
   Table,
   TableBody,
@@ -19,44 +19,60 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import { Person, TrendingUp, Assignment, Grade } from '@mui/icons-material';
+import { 
+  Person, 
+  TrendingUp, 
+  Assignment,
+  Analytics,
+} from '@mui/icons-material';
 
 const StudentAnalytics: React.FC = () => {
-  // Mock data for demonstration
-  const classOverview = {
+  const classPerformance = {
+    averageGrade: 78,
+    completionRate: 85,
     totalStudents: 24,
-    averageGrade: 82.5,
-    completionRate: 88.3,
-    activeAssignments: 5
+    activeStudents: 20
   };
 
   const topPerformers = [
-    { name: 'Alice Johnson', avgGrade: 94.5, completedAssignments: 12 },
-    { name: 'Bob Smith', avgGrade: 91.2, completedAssignments: 11 },
-    { name: 'Carol Davis', avgGrade: 89.8, completedAssignments: 12 },
-    { name: 'David Wilson', avgGrade: 87.3, completedAssignments: 10 },
-    { name: 'Eve Brown', avgGrade: 85.6, completedAssignments: 11 },
+    { name: 'Alice Johnson', grade: 95, assignments: 12 },
+    { name: 'Bob Smith', grade: 92, assignments: 11 },
+    { name: 'Carol Davis', grade: 89, assignments: 12 },
+    { name: 'David Wilson', grade: 87, assignments: 10 },
+    { name: 'Eva Brown', grade: 85, assignments: 11 }
   ];
 
-  const skillProgress = [
-    { skill: 'JavaScript', average: 78.5, students: 24 },
-    { skill: 'Python', average: 72.3, students: 18 },
-    { skill: 'Data Structures', average: 65.8, students: 22 },
-    { skill: 'Algorithms', average: 58.2, students: 20 },
-    { skill: 'React', average: 71.4, students: 15 },
+  const skillsAnalysis = [
+    { skill: 'JavaScript Fundamentals', average: 82, trend: 'up' },
+    { skill: 'Data Structures', average: 75, trend: 'up' },
+    { skill: 'Algorithms', average: 68, trend: 'stable' },
+    { skill: 'Problem Solving', average: 79, trend: 'up' },
+    { skill: 'Code Quality', average: 71, trend: 'down' }
   ];
 
   const recentSubmissions = [
-    { student: 'Alice Johnson', assignment: 'Binary Search', grade: 95, submittedAt: '2 hours ago' },
-    { student: 'Bob Smith', assignment: 'Sorting Algorithms', grade: 88, submittedAt: '4 hours ago' },
-    { student: 'Carol Davis', assignment: 'Binary Search', grade: 92, submittedAt: '6 hours ago' },
-    { student: 'David Wilson', assignment: 'React Components', grade: 85, submittedAt: '1 day ago' },
-    { student: 'Eve Brown', assignment: 'Sorting Algorithms', grade: 90, submittedAt: '1 day ago' },
+    { student: 'Alice Johnson', assignment: 'Binary Search Tree', grade: 95, date: '2024-01-15' },
+    { student: 'Bob Smith', assignment: 'Sorting Algorithms', grade: 88, date: '2024-01-14' },
+    { student: 'Carol Davis', assignment: 'Hash Tables', grade: 92, date: '2024-01-14' },
+    { student: 'David Wilson', assignment: 'Graph Traversal', grade: 85, date: '2024-01-13' },
+    { student: 'Eva Brown', assignment: 'Dynamic Programming', grade: 78, date: '2024-01-13' }
   ];
+
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'up':
+        return <TrendingUp color="success" sx={{ fontSize: 16 }} />;
+      case 'down':
+        return <TrendingUp color="error" sx={{ fontSize: 16, transform: 'rotate(180deg)' }} />;
+      default:
+        return null;
+    }
+  };
 
   const getGradeColor = (grade: number) => {
     if (grade >= 90) return 'success';
-    if (grade >= 70) return 'warning';
+    if (grade >= 80) return 'warning';
+    if (grade >= 70) return 'info';
     return 'error';
   };
 
@@ -66,69 +82,77 @@ const StudentAnalytics: React.FC = () => {
         Student Analytics
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        Monitor student progress and class performance
+        Comprehensive analysis of student performance and progress
       </Typography>
 
       <Grid container spacing={3}>
         {/* Class Overview */}
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={3}>
           <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Class Overview
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 60, height: 60, mx: 'auto', mb: 2 }}>
+                <Analytics />
+              </Avatar>
+              <Typography variant="h4" gutterBottom>
+                {classPerformance.averageGrade}%
               </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={6} md={3}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Avatar sx={{ bgcolor: 'primary.main', mx: 'auto', mb: 1 }}>
-                      <Person />
-                    </Avatar>
-                    <Typography variant="h6">{classOverview.totalStudents}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Students
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6} md={3}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Avatar sx={{ bgcolor: 'success.main', mx: 'auto', mb: 1 }}>
-                      <Grade />
-                    </Avatar>
-                    <Typography variant="h6">{classOverview.averageGrade}%</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Average Grade
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6} md={3}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Avatar sx={{ bgcolor: 'warning.main', mx: 'auto', mb: 1 }}>
-                      <TrendingUp />
-                    </Avatar>
-                    <Typography variant="h6">{classOverview.completionRate}%</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Completion Rate
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6} md={3}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Avatar sx={{ bgcolor: 'info.main', mx: 'auto', mb: 1 }}>
-                      <Assignment />
-                    </Avatar>
-                    <Typography variant="h6">{classOverview.activeAssignments}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Active Assignments
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
+              <Typography variant="body2" color="text.secondary">
+                Class Average
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Avatar sx={{ bgcolor: 'success.main', width: 60, height: 60, mx: 'auto', mb: 2 }}>
+                <Assignment />
+              </Avatar>
+              <Typography variant="h4" gutterBottom>
+                {classPerformance.completionRate}%
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Completion Rate
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Avatar sx={{ bgcolor: 'info.main', width: 60, height: 60, mx: 'auto', mb: 2 }}>
+                <Person />
+              </Avatar>
+              <Typography variant="h4" gutterBottom>
+                {classPerformance.totalStudents}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Students
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Avatar sx={{ bgcolor: 'warning.main', width: 60, height: 60, mx: 'auto', mb: 2 }}>
+                <TrendingUp />
+              </Avatar>
+              <Typography variant="h4" gutterBottom>
+                {classPerformance.activeStudents}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Active Students
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
 
         {/* Top Performers */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -139,16 +163,16 @@ const StudentAnalytics: React.FC = () => {
                   <ListItem key={index} divider={index < topPerformers.length - 1}>
                     <ListItemAvatar>
                       <Avatar sx={{ bgcolor: 'primary.main' }}>
-                        {student.name.charAt(0)}
+                        {index + 1}
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
                       primary={student.name}
-                      secondary={`${student.completedAssignments} assignments completed`}
+                      secondary={`${student.assignments} assignments completed`}
                     />
                     <Chip
-                      label={`${student.avgGrade}%`}
-                      color={getGradeColor(student.avgGrade) as any}
+                      label={`${student.grade}%`}
+                      color={getGradeColor(student.grade) as any}
                       size="small"
                     />
                   </ListItem>
@@ -158,30 +182,28 @@ const StudentAnalytics: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Skill Progress */}
+        {/* Skills Analysis */}
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Skill Progress Across Class
+                Skills Analysis
               </Typography>
-              {skillProgress.map((skill, index) => (
+              {skillsAnalysis.map((skill, index) => (
                 <Box key={index} sx={{ mb: 3 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body1">{skill.skill}</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        {skill.students} students
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {skill.average}%
-                      </Typography>
+                      <Typography variant="body2">{skill.skill}</Typography>
+                      {getTrendIcon(skill.trend)}
                     </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {skill.average}%
+                    </Typography>
                   </Box>
                   <LinearProgress
                     variant="determinate"
                     value={skill.average}
-                    sx={{ height: 8, borderRadius: 4 }}
+                    sx={{ height: 6, borderRadius: 3 }}
                   />
                 </Box>
               ))}
@@ -190,20 +212,20 @@ const StudentAnalytics: React.FC = () => {
         </Grid>
 
         {/* Recent Submissions */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Recent Submissions
               </Typography>
               <TableContainer>
-                <Table size="small">
+                <Table>
                   <TableHead>
                     <TableRow>
                       <TableCell>Student</TableCell>
                       <TableCell>Assignment</TableCell>
                       <TableCell>Grade</TableCell>
-                      <TableCell>Submitted</TableCell>
+                      <TableCell>Date</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -218,52 +240,12 @@ const StudentAnalytics: React.FC = () => {
                             size="small"
                           />
                         </TableCell>
-                        <TableCell>{submission.submittedAt}</TableCell>
+                        <TableCell>{new Date(submission.date).toLocaleDateString()}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </TableContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Assignment Performance */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Assignment Performance Analysis
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Detailed analysis of how students are performing across different assignments and skill areas.
-              </Typography>
-              
-              <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  AI Insights
-                </Typography>
-                <List>
-                  <ListItem>
-                    <ListItemText
-                      primary="Data Structures assignments have the lowest completion rate"
-                      secondary="Consider providing additional resources or breaking down complex concepts"
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary="JavaScript assignments show consistently high performance"
-                      secondary="Students are well-prepared in this area"
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary="5 students may need additional support"
-                      secondary="Their recent submissions show declining performance"
-                    />
-                  </ListItem>
-                </List>
-              </Box>
             </CardContent>
           </Card>
         </Grid>

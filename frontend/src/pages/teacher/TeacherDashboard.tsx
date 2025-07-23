@@ -14,6 +14,7 @@ import {
   ListItemAvatar,
   Fab,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import { 
   Class, 
@@ -66,10 +67,8 @@ const TeacherDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <Box>
-        <Typography variant="h4" gutterBottom>
-          Loading...
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress />
       </Box>
     );
   }

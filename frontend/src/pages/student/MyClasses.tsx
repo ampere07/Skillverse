@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -7,16 +8,17 @@ import {
   CardContent,
   CardActions,
   Button,
-  Chip,
-  Avatar,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
+  Alert,
+  Chip,
+  Avatar,
   Fab,
 } from '@mui/material';
-import { Add, Person, Assignment } from '@mui/icons-material';
+import { Add, Assignment, Person, School } from '@mui/icons-material';
 import axios from 'axios';
 
 interface Class {
@@ -39,6 +41,8 @@ const MyClasses: React.FC = () => {
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [classCode, setClassCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchClasses();
@@ -56,19 +60,38 @@ const MyClasses: React.FC = () => {
   };
 
   const handleJoinClass = async () => {
-    if (!classCode.trim()) return;
+    if (!classCode.trim()) {
+      setError('Please enter a class code');
+      return;
+    }
 
     setJoinLoading(true);
+    setError('');
+
     try {
       await axios.post('/api/student/classes/join', { classCode });
+      setSuccess('Successfully joined the class!');
       setJoinDialogOpen(false);
       setClassCode('');
-      fetchClasses(); // Refresh the classes
+      fetchClasses(); // Refresh classes
     } catch (error) {
       console.error('Error joining class:', error);
+      const errorMessage = (error as any).response?.data?.message || 'Failed to join class';
+      setError(errorMessage);
     } finally {
       setJoinLoading(false);
     }
+  };
+
+  const getThemeColor = (theme: string) => {
+    const themes: { [key: string]: string } = {
+      blue: '#1976d2',
+      green: '#388e3c',
+      purple: '#7b1fa2',
+      orange: '#f57c00',
+      red: '#d32f2f',
+    };
+    return themes[theme] || themes.blue;
   };
 
   if (loading) {
@@ -87,20 +110,33 @@ const MyClasses: React.FC = () => {
         My Classes
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        View and manage your enrolled classes
+        View your enrolled classes and access assignments
       </Typography>
+
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      )}
 
       {classes.length === 0 ? (
         <Box sx={{ textAlign: 'center', mt: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            You haven't joined any classes yet
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No classes joined yet
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Click the + button to join a class
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Join your first class using a class code from your teacher
           </Typography>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => setJoinDialogOpen(true)}
+          >
+            Join Class
+          </Button>
         </Box>
       ) : (
-        <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid container spacing={3}>
           {classes.map((classItem) => (
             <Grid item xs={12} md={6} lg={4} key={classItem._id}>
               <Card
@@ -108,6 +144,8 @@ const MyClasses: React.FC = () => {
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
+                  borderTop: 4,
+                  borderTopColor: getThemeColor(classItem.theme),
                   '&:hover': {
                     boxShadow: 4,
                   },
@@ -115,8 +153,13 @@ const MyClasses: React.FC = () => {
               >
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                      {classItem.name.charAt(0).toUpperCase()}
+                    <Avatar
+                      sx={{
+                        bgcolor: getThemeColor(classItem.theme),
+                        mr: 2,
+                      }}
+                    >
+                      <School />
                     </Avatar>
                     <Box>
                       <Typography variant="h6" component="h2">
@@ -128,30 +171,25 @@ const MyClasses: React.FC = () => {
                     </Box>
                   </Box>
                   
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      <Person sx={{ fontSize: 16, mr: 1 }} />
-                      {classItem.teacherId.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Class Code: {classItem.code}
-                    </Typography>
-                  </Box>
-
                   {classItem.description && (
-                    <Typography variant="body2" sx={{ mt: 1 }}>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
                       {classItem.description}
                     </Typography>
                   )}
-
-                  <Box sx={{ mt: 2 }}>
-                    <Chip
-                      label={`Created ${new Date(classItem.createdAt).toLocaleDateString()}`}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <Person fontSize="small" color="action" />
+                    <Typography variant="body2" color="text.secondary">
+                      {classItem.teacherId.name}
+                    </Typography>
                   </Box>
+                  
+                  <Chip
+                    label={`Code: ${classItem.code}`}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
                 </CardContent>
                 
                 <CardActions>
@@ -159,6 +197,8 @@ const MyClasses: React.FC = () => {
                     size="small"
                     variant="contained"
                     startIcon={<Assignment />}
+                    component={Link}
+                    to="/assignments"
                     fullWidth
                   >
                     View Assignments
@@ -170,7 +210,41 @@ const MyClasses: React.FC = () => {
         </Grid>
       )}
 
-      {/* Join Class FAB */}
+      {/* Join Class Dialog */}
+      <Dialog open={joinDialogOpen} onClose={() => setJoinDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Join Class</DialogTitle>
+        <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Class Code"
+            fullWidth
+            variant="outlined"
+            value={classCode}
+            onChange={(e) => setClassCode(e.target.value.toUpperCase())}
+            placeholder="Enter 6-digit class code"
+            inputProps={{ maxLength: 6 }}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setJoinDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleJoinClass}
+            variant="contained"
+            disabled={joinLoading}
+          >
+            {joinLoading ? 'Joining...' : 'Join Class'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Floating Action Button */}
       <Fab
         color="primary"
         aria-label="join class"
@@ -183,38 +257,6 @@ const MyClasses: React.FC = () => {
       >
         <Add />
       </Fab>
-
-      {/* Join Class Dialog */}
-      <Dialog
-        open={joinDialogOpen}
-        onClose={() => setJoinDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Join a Class</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Class Code"
-            fullWidth
-            variant="outlined"
-            value={classCode}
-            onChange={(e) => setClassCode(e.target.value)}
-            placeholder="Enter the class code provided by your teacher"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setJoinDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleJoinClass}
-            variant="contained"
-            disabled={!classCode.trim() || joinLoading}
-          >
-            {joinLoading ? 'Joining...' : 'Join Class'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

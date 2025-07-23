@@ -1,0 +1,23 @@
+{
+  "name": "skillverse",
+  "version": "1.0.0",
+  "description": "Java Educational Platform",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"pnpm run backend\" \"pnpm run frontend\"",
+    "backend": "cd backend && pnpm run dev",
+    "frontend": "cd frontend && pnpm start",
+    "install-all": "pnpm install && cd backend && pnpm install && cd ../frontend && pnpm install",
+    "build": "cd backend && pnpm run build && cd ../frontend && pnpm run build",
+    "start": "cd backend && pnpm start",
+    "build-backend": "cd backend && pnpm run build",
+    "build-frontend": "cd frontend && pnpm run build"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "devDependencies": {},
+  "keywords": ["java", "education", "programming", "compiler"],
+  "author": "SkillVerse",
+  "license": "MIT"
+}

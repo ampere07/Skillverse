@@ -16,35 +16,29 @@ import {
   Avatar,
   Button,
   TextField,
-  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Chip,
-  Divider,
   Alert,
-  SelectChangeEvent,
 } from '@mui/material';
-import { CheckCircle, Schedule } from '@mui/icons-material';
-import Editor from '@monaco-editor/react';
+import { Person, Grade } from '@mui/icons-material';
+import { Editor } from '@monaco-editor/react';
 import axios from 'axios';
 
-interface Class {
-  _id: string;
-  name: string;
-  subject: string;
-}
-
-interface AssignmentData {
+interface AssignmentType {
   _id: string;
   title: string;
-  classId: string;
+  classId: {
+    _id: string;
+    name: string;
+  };
 }
 
 interface Submission {
   _id: string;
-  assignmentId: {
-    _id: string;
-    title: string;
-    totalPoints: number;
-  };
+  assignmentId: AssignmentType;
   studentId: {
     _id: string;
     name: string;
@@ -54,49 +48,21 @@ interface Submission {
   language: string;
   grade?: number;
   teacherFeedback?: string;
-  status: 'pending' | 'graded';
   submittedAt: string;
+  status: string;
 }
 
 const GradeSubmissions: React.FC = () => {
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [assignments, setAssignments] = useState<AssignmentData[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentType[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [selectedClass, setSelectedClass] = useState('');
   const [selectedAssignment, setSelectedAssignment] = useState('');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [gradeDialogOpen, setGradeDialogOpen] = useState(false);
   const [grade, setGrade] = useState('');
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchClasses();
-  }, []);
-
-  const fetchClasses = async () => {
-    try {
-      const response = await axios.get('/api/teacher/classes');
-      setClasses(response.data);
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    }
-  };
-
-  const fetchAssignments = useCallback(async () => {
-    if (!selectedClass) return;
-    
-    try {
-      const response = await axios.get('/api/teacher/assignments');
-      const filteredAssignments = response.data.filter(
-        (assignment: AssignmentData) => assignment.classId === selectedClass
-      );
-      setAssignments(filteredAssignments);
-    } catch (error) {
-      console.error('Error fetching assignments:', error);
-    }
-  }, [selectedClass]);
+  const [success, setSuccess] = useState('');
 
   const fetchSubmissions = useCallback(async () => {
     if (!selectedAssignment) return;
@@ -104,7 +70,6 @@ const GradeSubmissions: React.FC = () => {
     try {
       const response = await axios.get(`/api/teacher/submissions/${selectedAssignment}`);
       setSubmissions(response.data);
-      setSelectedSubmission(null);
     } catch (error) {
       console.error('Error fetching submissions:', error);
     }
@@ -112,65 +77,69 @@ const GradeSubmissions: React.FC = () => {
 
   useEffect(() => {
     fetchAssignments();
-  }, [fetchAssignments]);
+  }, []);
 
   useEffect(() => {
-    fetchSubmissions();
-  }, [fetchSubmissions]);
+    if (selectedAssignment) {
+      fetchSubmissions();
+    }
+  }, [selectedAssignment, fetchSubmissions]);
 
-  const handleClassChange = (e: SelectChangeEvent) => {
-    setSelectedClass(e.target.value);
-    setSelectedAssignment('');
-    setSubmissions([]);
-    setSelectedSubmission(null);
+  const fetchAssignments = async () => {
+    try {
+      const response = await axios.get('/api/teacher/assignments');
+      setAssignments(response.data);
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+    }
   };
 
-  const handleAssignmentChange = (e: SelectChangeEvent) => {
-    setSelectedAssignment(e.target.value);
-    setSelectedSubmission(null);
-  };
-
-  const handleSubmissionSelect = (submission: Submission) => {
+  const handleGradeSubmission = (submission: Submission) => {
     setSelectedSubmission(submission);
     setGrade(submission.grade?.toString() || '');
     setFeedback(submission.teacherFeedback || '');
+    setGradeDialogOpen(true);
   };
 
-  const handleGradeSubmission = async () => {
-    if (!selectedSubmission || !grade) return;
+  const submitGrade = async () => {
+    if (!selectedSubmission) return;
+
+    const gradeValue = parseInt(grade);
+    if (isNaN(gradeValue) || gradeValue < 0 || gradeValue > 100) {
+      setError('Please enter a valid grade between 0 and 100');
+      return;
+    }
 
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
       await axios.post(`/api/teacher/grade/${selectedSubmission._id}`, {
-        grade: parseInt(grade),
+        grade: gradeValue,
         feedback
       });
+
       setSuccess('Submission graded successfully!');
+      setGradeDialogOpen(false);
       fetchSubmissions(); // Refresh submissions
-      
-      // Update the selected submission
-      setSelectedSubmission({
-        ...selectedSubmission,
-        grade: parseInt(grade),
-        teacherFeedback: feedback,
-        status: 'graded'
-      });
     } catch (error) {
-      setError('Error grading submission. Please try again.');
+      console.error('Error grading submission:', error);
+      const errorMessage = (error as any).response?.data?.message || 'Error grading submission. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const getStatusColor = (status: string) => {
-    return status === 'graded' ? 'success' : 'warning';
-  };
-
-  const getStatusIcon = (status: string) => {
-    return status === 'graded' ? <CheckCircle /> : <Schedule />;
+    switch (status) {
+      case 'graded':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      default:
+        return 'default';
+    }
   };
 
   return (
@@ -182,191 +151,174 @@ const GradeSubmissions: React.FC = () => {
         Review and grade student submissions
       </Typography>
 
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
-      )}
-
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
-        {/* Selection Panel */}
+        {/* Assignment Selection */}
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Select Assignment
               </Typography>
-              
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Class</InputLabel>
-                <Select
-                  value={selectedClass}
-                  onChange={handleClassChange}
-                  label="Class"
-                >
-                  {classes.map((cls) => (
-                    <MenuItem key={cls._id} value={cls._id}>
-                      {cls.name} ({cls.subject})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth sx={{ mb: 2 }}>
+              <FormControl fullWidth>
                 <InputLabel>Assignment</InputLabel>
                 <Select
                   value={selectedAssignment}
-                  onChange={handleAssignmentChange}
+                  onChange={(e) => setSelectedAssignment(e.target.value)}
                   label="Assignment"
-                  disabled={!selectedClass}
                 >
                   {assignments.map((assignment) => (
                     <MenuItem key={assignment._id} value={assignment._id}>
-                      {assignment.title}
+                      {assignment.title} - {assignment.classId.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-
-              {/* Submissions List */}
-              {submissions.length > 0 && (
-                <Box>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Submissions ({submissions.length})
-                  </Typography>
-                  <List>
-                    {submissions.map((submission) => (
-                      <ListItem
-                        key={submission._id}
-                        button
-                        onClick={() => handleSubmissionSelect(submission)}
-                        selected={selectedSubmission?._id === submission._id}
-                        divider
-                      >
-                        <ListItemAvatar>
-                          <Avatar>
-                            {getStatusIcon(submission.status)}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={submission.studentId.name}
-                          secondary={`Submitted: ${new Date(submission.submittedAt).toLocaleDateString()}`}
-                        />
-                        <Chip
-                          label={submission.status}
-                          color={getStatusColor(submission.status) as any}
-                          size="small"
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-              )}
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Grading Interface */}
+        {/* Submissions List */}
         <Grid item xs={12} md={8}>
-          {selectedSubmission ? (
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">
-                    {selectedSubmission.studentId.name}'s Submission
-                  </Typography>
-                  <Chip
-                    label={selectedSubmission.status}
-                    color={getStatusColor(selectedSubmission.status) as any}
-                  />
-                </Box>
-                
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Assignment: {selectedSubmission.assignmentId.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Submitted: {new Date(selectedSubmission.submittedAt).toLocaleString()}
-                </Typography>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Code Display */}
-                <Typography variant="subtitle1" gutterBottom>
-                  Student Code
-                </Typography>
-                <Box sx={{ height: 300, border: 1, borderColor: 'divider', mb: 2 }}>
-                  <Editor
-                    height="100%"
-                    language={selectedSubmission.language}
-                    value={selectedSubmission.code}
-                    theme="vs-dark"
-                    options={{
-                      fontSize: 14,
-                      minimap: { enabled: false },
-                      scrollBeyondLastLine: false,
-                      readOnly: true
-                    }}
-                  />
-                </Box>
-
-                {/* Grading Section */}
-                <Typography variant="subtitle1" gutterBottom>
-                  Grading
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Grade"
-                      type="number"
-                      value={grade}
-                      onChange={(e) => setGrade(e.target.value)}
-                      inputProps={{ min: 0, max: selectedSubmission.assignmentId.totalPoints }}
-                      helperText={`Out of ${selectedSubmission.assignmentId.totalPoints} points`}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Feedback"
-                      multiline
-                      rows={4}
-                      value={feedback}
-                      onChange={(e) => setFeedback(e.target.value)}
-                      placeholder="Provide feedback to help the student improve..."
-                    />
-                  </Grid>
-                </Grid>
-
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button
-                    variant="contained"
-                    onClick={handleGradeSubmission}
-                    disabled={loading || !grade}
-                  >
-                    {loading ? 'Grading...' : 'Save Grade'}
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          ) : (
-            <Paper sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="h6" color="text.secondary">
-                Select a submission to grade
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Submissions
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Choose a class and assignment from the left panel to view submissions
-              </Typography>
-            </Paper>
-          )}
+              {submissions.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  {selectedAssignment ? 'No submissions found for this assignment.' : 'Please select an assignment to view submissions.'}
+                </Typography>
+              ) : (
+                <List>
+                  {submissions.map((submission) => (
+                    <ListItem
+                      key={submission._id}
+                      divider
+                      secondaryAction={
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                          <Chip
+                            label={submission.status}
+                            color={getStatusColor(submission.status) as any}
+                            size="small"
+                          />
+                          {submission.grade && (
+                            <Chip
+                              label={`${submission.grade}%`}
+                              color={submission.grade >= 90 ? 'success' : submission.grade >= 70 ? 'warning' : 'error'}
+                              size="small"
+                            />
+                          )}
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<Grade />}
+                            onClick={() => handleGradeSubmission(submission)}
+                          >
+                            {submission.status === 'graded' ? 'Update Grade' : 'Grade'}
+                          </Button>
+                        </Box>
+                      }
+                    >
+                      <ListItemAvatar>
+                        <Avatar>
+                          <Person />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={submission.studentId.name}
+                        secondary={`Submitted: ${new Date(submission.submittedAt).toLocaleDateString()}`}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
+
+      {/* Grading Dialog */}
+      <Dialog
+        open={gradeDialogOpen}
+        onClose={() => setGradeDialogOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          Grade Submission - {selectedSubmission?.studentId.name}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3}>
+            {/* Code Display */}
+            <Grid item xs={12} md={8}>
+              <Typography variant="h6" gutterBottom>
+                Student Code
+              </Typography>
+              <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                <Editor
+                  height="400px"
+                  language={selectedSubmission?.language || 'javascript'}
+                  value={selectedSubmission?.code || ''}
+                  theme="vs-dark"
+                  options={{
+                    readOnly: true,
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    wordWrap: 'on'
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            {/* Grading Panel */}
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" gutterBottom>
+                Grading
+              </Typography>
+              <TextField
+                fullWidth
+                type="number"
+                label="Grade (0-100)"
+                value={grade}
+                onChange={(e) => setGrade(e.target.value)}
+                inputProps={{ min: 0, max: 100 }}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                multiline
+                rows={8}
+                label="Feedback"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Provide feedback to the student..."
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setGradeDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={submitGrade}
+            variant="contained"
+            disabled={loading}
+          >
+            {loading ? 'Saving...' : 'Save Grade'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
