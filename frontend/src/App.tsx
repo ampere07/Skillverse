@@ -8,7 +8,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 import StudentLayout from './layouts/StudentLayout';
 import TeacherLayout from './layouts/TeacherLayout';
 import theme from './styles/theme';
-import { CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box, Typography } from '@mui/material';
 
 function App() {
   return (
@@ -24,12 +24,47 @@ function App() {
 }
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   
-  if (loading) {
+  if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <CircularProgress />
+      <Box 
+        display="flex" 
+        flexDirection="column"
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="100vh"
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        }}
+      >
+        <CircularProgress 
+          size={60} 
+          sx={{ 
+            color: 'white',
+            mb: 3,
+          }} 
+        />
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            color: 'white',
+            fontWeight: 500,
+            textAlign: 'center',
+          }}
+        >
+          Loading SkillVerse...
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: 'rgba(255, 255, 255, 0.8)',
+            mt: 1,
+            textAlign: 'center',
+          }}
+        >
+          Preparing your learning environment
+        </Typography>
       </Box>
     );
   }

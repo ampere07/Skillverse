@@ -110,4 +110,21 @@ router.get('/check', requireAuth, async (req, res) => {
   }
 });
 
+// Get current user (alias for check)
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.session.userId).select('-password');
+    res.json({
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;
